@@ -1,0 +1,167 @@
+C51 COMPILER V9.56.0.0   INTERRUPT                                                         10/22/2020 17:53:30 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE INTERRUPT
+OBJECT MODULE PLACED IN .\Objects\Interrupt.obj
+COMPILER INVOKED BY: F:\Keil\C51\BIN\C51.EXE Interrupt.C OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\In
+                    -terrupt.lst) TABS(2) OBJECT(.\Objects\Interrupt.obj)
+
+line level    source
+
+   1          /*
+   2           *  2020年10月22日 16点08分 ☆4
+   3          
+   4            使用外部输入 INT0(P3.2)、INT1(P3.3) 触发中断，
+   5            三个 LED 的初始值为 001， 中断触发的话流水灯就会向左位移或者向右位移
+   6          
+   7            由于条件限制，没有信号发生器，这里使用下降沿触发中断，实验效果不会太好
+   8          
+   9            以下寄存器和外部中断相关
+  10            
+  11            定时器控制寄存器 TCON [7:0]
+  12            
+  13            TF1 TR1 TF0 TR0 IE1 IT1 IE0 IT0
+  14              7   6   5   4   3   2   1   0
+  15              
+  16              TF1:    Timer1 溢出标志位，进入中断后清零
+  17              TR1:    Timer1 启动/停止位，置 1 启动定时器，置 0 关闭定时器
+  18              TF0:    Timer0 同 TF1
+  19              TR0:    Timer0 同 TR1
+  20              
+  21              IE1:    外部中断 INT1 外部中断请求标识位，进入中断后自动清零
+  22              IT1:    外部中断 INT1 触发控制，0 表示低电平触发，1 表示下降沿触发。
+  23              
+  24              IE0:    Timer0 同 IE1
+  25              IT0:    Timer0 同 IT1
+  26          
+  27            中断使能寄存器 IE [7:0]
+  28          
+  29              EA E_DIS ET2 ES ET1 EX1 ET0 EX0
+  30                7   6    5   4  3   2   1   0
+  31          
+  32              EA:     全局中断使能位，置 1 并且 E_DIS == 0 允许中断，置 0 屏蔽中断
+  33              E_DIS:    全局中断禁用控制位，置 1 屏蔽中断，置 0 并且 EA == 1 允许中断
+  34              ET2:    定时器 T2 中断使能位，置 1 允许 T2 中断，置 0 屏蔽
+  35              ES:     UART0 中断使能位，置 1 允许 UART0 中断，置 0 屏蔽
+  36              ET1:    定时器 T1 中断使能位，同 ET2
+  37              EX1:    外部中断 INT1 使能位，置 1 允许中断，置 0 屏蔽
+  38              ET0:    定时器 T0 中断使能位，同 ET2
+  39              EX0:    外部中断 INT0 使能位，同 EX1
+  40          
+  41            CH559 的中断源相当多，这里仅仅使用 INT0 外部中断一个，下面的是中断号表
+  42            
+  43              0 --  外部中断 INT0
+  44              1 --  定时器 T0 中断
+  45              2 --  外部中断 INT1
+  46              3 --  定时器 T1 中断
+  47              4 --  UART0 中断
+  48              5 --  定时器 T2 中断
+  49              6 --  SPIO 中断
+  50              7 --  定时器 T3 中断
+  51              8 --  USB 中断
+  52              9 --  ADC 中断
+  53              10  --  UART1 中断
+  54              <<    中断 11 没有标，未知 
+C51 COMPILER V9.56.0.0   INTERRUPT                                                         10/22/2020 17:53:30 PAGE 2   
+
+  55              12  --  GPIO 中断
+  56              13  --  Watchdog 中断
+  57          
+  58           */
+  59           
+  60          #include"CH559.H"
+  61          
+  62          void P1_Configure(void){
+  63   1      
+  64   1          // PORT_CFG[3:0] -- P3、P2、P1、P0
+  65   1          // P1 为 推挽模式，第二位 PROT_CFG[1]
+  66   1          // xxxx_xxxx & 1111_1101 = xxxx_xx0x
+  67   1          PORT_CFG    = PORT_CFG & 0xFD;
+  68   1      
+  69   1        // LED 连接 P1^7、P1^6、P1^5、P1^4 
+  70   1          // 禁用上拉电阻,PU[7:0] 分别对应 P1^7 - P1^0
+  71   1          // 每个引脚的上拉可以单独控制
+  72   1          // xxxx_xxxx & 0000_1111 = 0000_xxxx 
+  73   1          P1_PU       = P1_PU & 0x0F;
+  74   1          // DIR 选输出模式，同样的每个引脚都可以单独控制 11110000
+  75   1        // xxxx_xxxx | 1111_0000 = 1111_xxxx
+  76   1          P1_DIR      = P1_DIR | 0xF0;
+  77   1      
+  78   1      }
+  79          
+  80          void P3_Configure(void){
+  81   1      
+  82   1          // PORT_CFG[3:0] -- P3、P2、P1、P0
+  83   1          // P3 为 开漏模式，第三位 PORT_CFG[3]
+  84   1          // xxxx_xxxx | 0000_1000 = xxxx_1xxx
+  85   1          PORT_CFG    = PORT_CFG | 0x08;
+  86   1      
+  87   1        // INT0 INT1 连接的引脚分别为 P3.2 P3.3
+  88   1          // 开启上拉电阻，xxxx_xxxx | 0000_1100 = xxxx_11xx
+  89   1          P3_PU       = P3_PU | 0x0C;
+  90   1          // DIR 选输出模式，同样的每个引脚都可以单独控制
+  91   1        // xxxx_xxxx | 0x0000_1100 = xxxx_11xx
+  92   1          P3_DIR      = P3_DIR | 0x0C;
+  93   1      }
+  94          
+  95          void interrupt_init(void){
+  96   1      
+  97   1        // 开启中断使能
+  98   1        EA = 1;
+  99   1        E_DIS = 0;
+ 100   1      
+ 101   1        // 允许外部输入中断 INT0 和 INT1
+ 102   1        // 低电平触发
+ 103   1        EX1 = 1;
+ 104   1        IT1 = 1;
+ 105   1        EX0 = 1;
+ 106   1        IT0 = 1;
+ 107   1      }
+ 108          
+ 109          signed char a = 0;
+ 110          
+ 111          void main(void){
+ 112   1        interrupt_init();
+ 113   1        P1_Configure();
+ 114   1        P3_Configure();
+ 115   1      
+ 116   1        P1 = 0xFF;
+C51 COMPILER V9.56.0.0   INTERRUPT                                                         10/22/2020 17:53:30 PAGE 3   
+
+ 117   1        while(1);
+ 118   1      }
+ 119          
+ 120          void INT0_Interrupt(void) interrupt 0 {
+ 121   1      
+ 122   1        if(a>=3)
+ 123   1          a = 0;
+ 124   1        else  
+ 125   1          a++;
+ 126   1      
+ 127   1        P1 = (0x10<<a);
+ 128   1        
+ 129   1      } 
+ 130          
+ 131          void INT1_Interrupt(void) interrupt 2{
+ 132   1      
+ 133   1        if(a<0)
+ 134   1          a = 3;
+ 135   1        else  
+ 136   1          a--;
+ 137   1      
+ 138   1        P1 = (0x10<<a);
+ 139   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    149    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

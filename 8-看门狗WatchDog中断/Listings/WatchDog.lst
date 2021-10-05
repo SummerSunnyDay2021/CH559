@@ -1,0 +1,141 @@
+C51 COMPILER V9.56.0.0   WATCHDOG                                                          10/29/2020 20:32:34 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE WATCHDOG
+OBJECT MODULE PLACED IN .\Objects\WatchDog.obj
+COMPILER INVOKED BY: F:\Keil\C51\BIN\C51.EXE WatchDog.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\Wat
+                    -chDog.lst) TABS(2) OBJECT(.\Objects\WatchDog.obj)
+
+line level    source
+
+   1          /*
+   2           *  2020年10月16日 21点00分 ☆5
+   3           *  看门狗实验
+   4           * 
+   5           *  看门狗（WatchDog), 功能如下：
+   6           *  在开启看门狗之后，如果没有及时的重载定时器，看门狗就会触发复位，
+   7           *  在程序中加入重载看门狗定时器的语句，一旦程序遇到干扰，跑飞，看门狗没
+             -有及时的被重载，系统就会自动复位。
+   8           *  这样系统出现错的时候，看门狗可以及时复位程序，让程序从指定地址重新运
+             -行。用以防止芯片控制的系统出现故障。
+   9           * 
+  10           *  在 CH559 内部，看门狗是一个 8 位的定时器，要使用 CH559 的看门狗，需要操作�
+             -��下寄存器。
+  11           *  
+  12           *  WDOG_COUNT [7:0] 看门狗计数寄存器，计数满 0xFF，溢出 0x00 时自动将看门狗中断�
+             -�志 bWDOG_IF_T0 置 1
+  13           *  WDOG_COUNT 的计数时钟频率为 Fsys/2622144,
+  14           *  以下是经验值，向 WDOG_COUNT 写入 0x00 ,12M 主频下定时周期约为 5.9s
+  15           *              向 WDOG_COUNT 写入 0x80, 12M 主频下定时周期约为 2.8s
+  16           * 
+  17           *  IE_EX [7:0] 扩展中断使能寄存器
+  18           *  IE_WDOG IE_GPIO N/C IE_UART1 IE_ADC IE_USB IE_TMR3 IE_SPI0
+  19           *      7     6      5    4        3      2      1       0
+  20           *  
+  21           *  IE_WDOG:    看门狗定时器中断使能位，置 1 允许 WDOG 中断，清 0 屏蔽
+  22           *  IE_GPIO:    GPIO 中断使能
+  23           *  IE_UART1:   UART1 中断使能
+  24           *  IE_ADC:     ADC 模数转化中断使能
+  25           *  IE_USB:     USB 中断使能
+  26           *  IE_TMR3:    定时器 3 中断使能
+  27           *  IE_SPI0:    SPI0 中断使能
+  28           * 
+  29           * GLOBAL_CFG [7:0] 全局配置寄存器
+  30           * N/C N/C bBOOT_LOAD bSW_RESET bCODE_WE bDATA_WE bXIR_XSFR bWDOG_EN
+  31           *  7   6       5        4           3        2       1          0
+  32           * 
+  33               * bBOOT_LOAD   ---- BL(BootLoad)状态位，区分 ISP 引导程序状态和应用程序状态，电�
+             -��上电时置 1，软件复位时清 0
+  34               * bSW_RESET    ---- 软件复位控制位，置 1 可以让程序复位，硬件自动清 0
+  35               * bCODE_WE     ---- Flash-ROM 写保护位，置 1 可以擦写 Flash-ROM，清 0 写保护
+  36               * bDATA_WE     ---- Flash-ROM 的 DataFlash 写保护，置 1 可擦写，清 0 写保护
+  37               * bXIR_XSFR    ---- MOXA _@R0/R1 指令范围访问控制位，清 0 允许访问全部 xdata 区域�
+             -��xRAM xBUS xSFR)
+  38               *                                                 置 1 专用于访问 xSFR,不能访问 xRAM xBUS
+  39               * bWDOG_EN     ---- 看门狗复位使能，清 0 看门狗用作定时器，置 1 允许看门狗产
+             -生复位
+  40           *   
+  41           * 
+  42           * SAFE_MODE [7:0] 安全模式控制寄存器
+  43           * CH559 提供了一个安全模式，一部分关键的操作只能在安全模式下进行，GLOBAL_CFG
+             -、PLL_CFG、CLOCK_CFG、SLEEP_CFG、WAKE_CFG.
+  44           * 这些关键的寄存器控制着系统的时钟、休眠、唤醒和复位等等信息的配置。
+  45           * 进入安全模式操作方法如下：
+  46           *  
+C51 COMPILER V9.56.0.0   WATCHDOG                                                          10/29/2020 20:32:34 PAGE 2   
+
+  47              // 写入两个密码数值，进入安全模式
+  48              * SAFE_MODE  = 0x55;
+  49              * SAFE_MODE  = 0xAA;
+  50              // 进入安全模式后，会有一个 13 到 23 个时钟周期的时间用于修改 关键SFR
+  51              * GLOBAL_CFG = GLOBAL_CFG & 0x01;   // 使能 看门狗复位
+  52              // 超出有效期，会自动推出安全模式
+  53              // 向该寄存器在写入任意值会提前推出安全模式
+  54              * GLOBAL_CFG = 0x88;
+  55           * 
+  56           * CHIP_ID [7:0] 芯片 ID 识别码，CH558 为 0x58，CH559 为 0x59
+  57           *  
+  58           */
+  59           
+  60          /*
+  61           * 2020年10月16日 23点17分 ☆5
+  62           * WatchDog 中断实验结果
+  63           * 忘记打开中断使能 EA，结果弄了老半天也没有进入看门狗中断
+  64           * 目测大约 2、3秒 LED 翻转一次。
+  65           * 
+  66           */
+  67          
+  68          #include"CH559.H"
+  69          
+  70          sbit myLED1 = P1^4;
+  71          
+  72          void P1_Config(void){
+  73   1      
+  74   1          // PORT_CFG[3:0] -- 1101
+  75   1          // P1 为 推挽模式，为 PROT_CFG[1]
+  76   1          PORT_CFG    = 0x0D;
+  77   1      
+  78   1          // 禁用上拉电阻
+  79   1          P1_PU       = 0x00;
+  80   1          // DIR 输出模式
+  81   1          P1_DIR      = 0xFF;
+  82   1      
+  83   1      }
+  84          
+  85          unsigned char tmp = 0;
+  86          
+  87          void WatchDog_Init(void){
+  88   1        
+  89   1          EA = 1;
+  90   1          IE_EX = 0x80;
+  91   1          WDOG_COUNT = 0x80;
+  92   1      }
+  93          
+  94          void main(void){
+  95   1          P1_Config();
+  96   1          P1 = 0x00;
+  97   1          WatchDog_Init();
+  98   1          while(1);
+  99   1      }
+ 100          
+ 101          void WatchDog_Interrupt(void) interrupt 13 {
+ 102   1          tmp = !tmp;
+ 103   1          myLED1 = tmp;
+ 104   1          WDOG_COUNT = 0x80;
+ 105   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+C51 COMPILER V9.56.0.0   WATCHDOG                                                          10/29/2020 20:32:34 PAGE 3   
+
+   CODE SIZE        =     67    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

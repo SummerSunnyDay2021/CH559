@@ -1,0 +1,90 @@
+C51 COMPILER V9.56.0.0   KEY_DEB                                                           03/07/2021 17:38:51 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE KEY_DEB
+OBJECT MODULE PLACED IN .\Objects\key_deb.obj
+COMPILER INVOKED BY: D:\Keil\C51\BIN\C51.EXE key_deb.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\key_
+                    -deb.lst) TABS(2) OBJECT(.\Objects\key_deb.obj)
+
+line level    source
+
+   1          /*
+   2              2021年3月7日 16点48分
+   3              按键消抖
+   4          
+   5              之前的 V1 版没有消抖，V2 版本采用不精确的 延时函数来消抖，效果非常的差
+   6              这个版本将采用精确的定时器来消抖。
+   7          
+   8          **/
+   9          
+  10          #include"CH559.H"
+  11          
+  12          sbit KEYIN0 = P0^0;
+  13          sbit LED_0  = P1^4;
+  14          sbit TEST   = P1^5;
+  15          
+  16          unsigned char   i = 0;
+  17          unsigned char   j = 0;
+  18          unsigned char   d0 = 0;
+  19          unsigned char   d1 = 0;
+  20          
+  21          // 5000 为每秒中断次数，
+  22          unsigned int freq = 255 - 12000000/12/5000;
+  23          
+  24          void Timer1_Init(void){
+  25   1      
+  26   1        // 设置定时器的数值
+  27   1      
+  28   1        TMOD = TMOD & 0x0F;
+  29   1        TMOD = TMOD | 0x20;
+  30   1      
+  31   1        EA = 1;
+  32   1        E_DIS = 0;
+  33   1        ET1 = 1;
+  34   1      
+  35   1          TH1 = (freq & 0xFF00) >> 8  ;
+  36   1          TL1 = (freq & 0x00FF)       ;
+  37   1        
+  38   1        TR1 = 1;
+  39   1      }
+  40          
+  41          void main(void){
+  42   1          Timer1_Init();
+  43   1          while(1);
+  44   1      
+  45   1      }
+  46          
+  47          void Timer1Interrupt(void) interrupt 3 {
+  48   1      
+  49   1          if(KEYIN0 == 0)
+  50   1              i = (j<<1)|0x01;
+  51   1          else
+  52   1              i = (j<<1)&0xFE;
+  53   1      
+  54   1          if( (i==0xFF)&&(j==0x7F) ){
+C51 COMPILER V9.56.0.0   KEY_DEB                                                           03/07/2021 17:38:51 PAGE 2   
+
+  55   2              d0 = !d0;
+  56   2          }
+  57   1          
+  58   1          d1 = !d1;
+  59   1          
+  60   1          TEST  = d1;
+  61   1          LED_0 = d0;
+  62   1              
+  63   1          j = i;
+  64   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    110    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      6    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

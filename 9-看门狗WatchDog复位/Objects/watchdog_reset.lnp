@@ -1,0 +1,4 @@
+".\Objects\STARTUP.obj",
+".\Objects\WatchDog_Reset.obj" 
+TO ".\Objects\watchdog_reset" 
+PRINT(".\Listings\watchdog_reset.m51") RAMSIZE(256) 

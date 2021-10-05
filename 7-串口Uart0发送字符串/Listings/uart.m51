@@ -1,0 +1,260 @@
+BL51 BANKED LINKER/LOCATER V6.22                                                        10/29/2020  19:58:51  PAGE 1
+
+
+BL51 BANKED LINKER/LOCATER V6.22, INVOKED BY:
+F:\KEIL\C51\BIN\BL51.EXE .\Objects\STARTUP.obj, .\Objects\Uart.obj TO .\Objects\uart PRINT (.\Listings\uart.m51) RAMSIZE
+>>  (256)
+
+
+MEMORY MODEL: SMALL
+
+
+INPUT MODULES INCLUDED:
+  .\Objects\STARTUP.obj (?C_STARTUP)
+  .\Objects\Uart.obj (UART)
+  F:\KEIL\C51\LIB\C51S.LIB (?C_INIT)
+
+
+LINK MAP OF MODULE:  .\Objects\uart (?C_STARTUP)
+
+
+            TYPE    BASE      LENGTH    RELOCATION   SEGMENT NAME
+            -----------------------------------------------------
+
+            * * * * * * *   D A T A   M E M O R Y   * * * * * * *
+            REG     0000H     0008H     ABSOLUTE     "REG BANK 0"
+            DATA    0008H     0042H     UNIT         ?DT?UART
+            IDATA   004AH     0001H     UNIT         ?STACK
+
+            * * * * * * *  X D A T A   M E M O R Y  * * * * * * *
+                    0000H     2446H                  *** GAP ***
+            XDATA   2446H     0001H     ABSOLUTE     
+            XDATA   2447H     0001H     ABSOLUTE     
+            XDATA   2448H     0001H     ABSOLUTE     
+            XDATA   2449H     0001H     ABSOLUTE     
+            XDATA   244AH     0001H     ABSOLUTE     
+            XDATA   244BH     0001H     ABSOLUTE     
+            XDATA   244CH     0001H     ABSOLUTE     
+            XDATA   244DH     0001H     ABSOLUTE     
+            XDATA   244EH     0001H     ABSOLUTE     
+            XDATA   244FH     0001H     ABSOLUTE     
+                    2450H     0430H                  *** GAP ***
+            XDATA   2880H     0001H     ABSOLUTE     
+            XDATA   2881H     0001H     ABSOLUTE     
+            XDATA   2882H     0001H     ABSOLUTE     
+            XDATA   2883H     0001H     ABSOLUTE     
+            XDATA   2884H     0001H     ABSOLUTE     
+            XDATA   2885H     0001H     ABSOLUTE     
+            XDATA   2886H     0001H     ABSOLUTE     
+                    2887H     0001H                  *** GAP ***
+            XDATA   2888H     0001H     ABSOLUTE     
+            XDATA   2889H     0001H     ABSOLUTE     
+
+            * * * * * * *   C O D E   M E M O R Y   * * * * * * *
+            CODE    0000H     0003H     ABSOLUTE     
+            CODE    0003H     0020H     UNIT         ?PR?TIMER2_CONFIG?UART
+            CODE    0023H     0003H     ABSOLUTE     
+            CODE    0026H     008CH     UNIT         ?C_C51STARTUP
+            CODE    00B2H     004AH     UNIT         ?C_INITSEG
+            CODE    00FCH     0036H     UNIT         ?PR?UART0_INTERRUPT?UART
+            CODE    0132H     0010H     UNIT         ?PR?MAIN?UART
+            CODE    0142H     0009H     UNIT         ?PR?UART0_CONFIG?UART
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/29/2020  19:58:51  PAGE 2
+
+
+            CODE    014BH     0007H     UNIT         ?PR?INTERRUPT_CONFIG?UART
+            CODE    0152H     0002H     UNIT         ?CO?UART
+
+
+
+OVERLAY MAP OF MODULE:   .\Objects\uart (?C_STARTUP)
+
+
+SEGMENT
+  +--> CALLED SEGMENT
+---------------------
+?C_C51STARTUP
+  +--> ?PR?MAIN?UART
+  +--> ?C_INITSEG
+
+?PR?MAIN?UART
+  +--> ?PR?INTERRUPT_CONFIG?UART
+  +--> ?PR?UART0_CONFIG?UART
+  +--> ?PR?TIMER2_CONFIG?UART
+
+?PR?TIMER2_CONFIG?UART
+  +--> ?CO?UART
+
+
+
+SYMBOL TABLE OF MODULE:  .\Objects\uart (?C_STARTUP)
+
+  VALUE           TYPE          NAME
+  ----------------------------------
+
+  -------         MODULE        ?C_STARTUP
+  C:0026H         SEGMENT       ?C_C51STARTUP
+  I:004AH         SEGMENT       ?STACK
+  C:0000H         PUBLIC        ?C_STARTUP
+  D:00E0H         SYMBOL        ACC
+  D:00F0H         SYMBOL        B
+  D:0083H         SYMBOL        DPH
+  D:0082H         SYMBOL        DPL
+  N:0000H         SYMBOL        IBPSTACK
+  N:0100H         SYMBOL        IBPSTACKTOP
+  N:0080H         SYMBOL        IDATALEN
+  C:0029H         SYMBOL        IDATALOOP
+  N:0000H         SYMBOL        PBPSTACK
+  N:0100H         SYMBOL        PBPSTACKTOP
+  N:0000H         SYMBOL        PDATALEN
+  N:0000H         SYMBOL        PDATASTART
+  N:0000H         SYMBOL        PPAGE
+  N:0000H         SYMBOL        PPAGEENABLE
+  D:00A0H         SYMBOL        PPAGE_SFR
+  D:0081H         SYMBOL        SP
+  C:0026H         SYMBOL        STARTUP1
+  N:0000H         SYMBOL        XBPSTACK
+  N:0000H         SYMBOL        XBPSTACKTOP
+  N:0000H         SYMBOL        XDATALEN
+  N:0000H         SYMBOL        XDATASTART
+  C:0000H         LINE#         126
+  C:0026H         LINE#         133
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/29/2020  19:58:51  PAGE 3
+
+
+  C:0028H         LINE#         134
+  C:0029H         LINE#         135
+  C:002AH         LINE#         136
+  C:002CH         LINE#         185
+  C:002FH         LINE#         196
+  -------         ENDMOD        ?C_STARTUP
+
+  -------         MODULE        UART
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:0080H         PUBLIC        P0
+  D:0090H         PUBLIC        P1
+  D:00A0H         PUBLIC        P2
+  D:00B0H         PUBLIC        P3
+  B:00A8H.6       PUBLIC        E_DIS
+  B:00A8H.7       PUBLIC        EA
+  X:2888H         PUBLIC        LED_DMA_XH
+  D:00E8H         PUBLIC        IE_EX
+  X:2889H         PUBLIC        LED_DMA_XL
+  D:00A8H         PUBLIC        IE
+  B:00A8H.4       PUBLIC        ES
+  D:00B8H         PUBLIC        IP
+  B:0098H.0       PUBLIC        RI
+  B:0098H.1       PUBLIC        TI
+  C:0152H         PUBLIC        baud
+  D:00CBH         PUBLIC        RCAP2H
+  D:00D8H         PUBLIC        USB_INT_FG
+  D:00CAH         PUBLIC        RCAP2L
+  C:0132H         PUBLIC        main
+  B:00C8H.1       PUBLIC        C_T2
+  B:00C8H.5       PUBLIC        RCLK
+  B:00C8H.4       PUBLIC        TCLK
+  C:0003H         PUBLIC        timer2_config
+  D:0099H         PUBLIC        SBUF
+  D:0098H         PUBLIC        SCON
+  D:0088H         PUBLIC        TCON
+  D:00F8H         PUBLIC        SPI0_STAT
+  X:2883H         PUBLIC        LED_CK_SE
+  C:00FCH         PUBLIC        uart0_interrupt
+  B:00C8H.0       PUBLIC        CP_RL2
+  C:0142H         PUBLIC        uart0_config
+  C:014BH         PUBLIC        interrupt_config
+  D:00CDH         PUBLIC        TH2
+  B:0098H.7       PUBLIC        SM0
+  X:2882H         PUBLIC        LED_DATA
+  B:0098H.6       PUBLIC        SM1
+  D:00CCH         PUBLIC        TL2
+  B:0098H.5       PUBLIC        SM2
+  B:00C8H.2       PUBLIC        TR2
+  D:00C0H         PUBLIC        P4_OUT
+  B:0098H.4       PUBLIC        REN
+  D:00C8H         PUBLIC        T2CON
+  D:0008H         PUBLIC        i
+  D:0009H         PUBLIC        txd_dat
+  X:2881H         PUBLIC        LED_CTRL
+  X:2447H         PUBLIC        UEP2_3_MOD
+  X:2446H         PUBLIC        UEP4_1_MOD
+  X:2884H         PUBLIC        LED_DMA_AH
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/29/2020  19:58:51  PAGE 4
+
+
+  X:2880H         PUBLIC        LED_STAT
+  X:2885H         PUBLIC        LED_DMA_AL
+  X:2448H         PUBLIC        UEP0_DMA_H
+  D:0049H         PUBLIC        send_enable
+  X:244AH         PUBLIC        UEP1_DMA_H
+  X:244CH         PUBLIC        UEP2_DMA_H
+  X:244EH         PUBLIC        UEP3_DMA_H
+  X:2886H         PUBLIC        LED_DMA_CN
+  X:2449H         PUBLIC        UEP0_DMA_L
+  D:00D0H         PUBLIC        PSW
+  X:244BH         PUBLIC        UEP1_DMA_L
+  X:244DH         PUBLIC        UEP2_DMA_L
+  X:244FH         PUBLIC        UEP3_DMA_L
+  -------         PROC          TIMER2_CONFIG
+  C:0003H         LINE#         22
+  C:0003H         LINE#         24
+  C:0011H         LINE#         25
+  C:0014H         LINE#         26
+  C:0016H         LINE#         27
+  C:0018H         LINE#         29
+  C:001AH         LINE#         30
+  C:001CH         LINE#         32
+  C:001EH         LINE#         33
+  C:0020H         LINE#         35
+  C:0022H         LINE#         40
+  -------         ENDPROC       TIMER2_CONFIG
+  -------         PROC          UART0_CONFIG
+  C:0142H         LINE#         42
+  C:0142H         LINE#         43
+  C:0144H         LINE#         44
+  C:0146H         LINE#         45
+  C:0148H         LINE#         47
+  C:014AH         LINE#         48
+  -------         ENDPROC       UART0_CONFIG
+  -------         PROC          INTERRUPT_CONFIG
+  C:014BH         LINE#         50
+  C:014BH         LINE#         52
+  C:014DH         LINE#         53
+  C:014FH         LINE#         54
+  C:0151H         LINE#         56
+  -------         ENDPROC       INTERRUPT_CONFIG
+  -------         PROC          MAIN
+  C:0132H         LINE#         61
+  C:0132H         LINE#         63
+  C:0135H         LINE#         64
+  C:0138H         LINE#         65
+  C:013BH         LINE#         66
+  C:013EH         LINE#         67
+  C:0140H         LINE#         68
+  -------         ENDPROC       MAIN
+  -------         PROC          UART0_INTERRUPT
+  C:00FCH         LINE#         72
+  C:0107H         LINE#         74
+  C:010AH         LINE#         75
+  C:010EH         LINE#         76
+  C:0116H         LINE#         77
+  C:0118H         LINE#         78
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/29/2020  19:58:51  PAGE 5
+
+
+  C:011AH         LINE#         79
+  C:011CH         LINE#         80
+  C:011FH         LINE#         81
+  C:0122H         LINE#         82
+  C:0122H         LINE#         84
+  C:0122H         LINE#         85
+  C:0124H         LINE#         86
+  C:0124H         LINE#         88
+  C:0127H         LINE#         89
+  C:0129H         LINE#         90
+  C:0129H         LINE#         92
+  -------         ENDPROC       UART0_INTERRUPT
+  -------         ENDMOD        UART
+
+Program Size: data=75.0 xdata=19 code=340
+LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)

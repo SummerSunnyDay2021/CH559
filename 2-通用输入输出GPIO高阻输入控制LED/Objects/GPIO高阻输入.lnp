@@ -1,0 +1,4 @@
+".\Objects\STARTUP.obj",
+".\Objects\GPIO高阻输入.obj" 
+TO ".\Objects\GPIO高阻输入" 
+PRINT(".\Listings\GPIO高阻输入.m51") RAMSIZE(256) 

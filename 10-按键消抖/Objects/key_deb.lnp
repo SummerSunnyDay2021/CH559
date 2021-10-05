@@ -1,0 +1,4 @@
+".\Objects\STARTUP.obj",
+".\Objects\key_deb.obj" 
+TO ".\Objects\key_deb" 
+PRINT(".\Listings\key_deb.m51") RAMSIZE(256) 

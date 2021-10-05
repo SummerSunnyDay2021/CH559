@@ -1,0 +1,209 @@
+C51 COMPILER V9.56.0.0   TIMER2                                                            10/26/2020 16:05:27 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE TIMER2
+OBJECT MODULE PLACED IN .\Objects\Timer2.obj
+COMPILER INVOKED BY: F:\Keil\C51\BIN\C51.EXE Timer2.C OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\Timer
+                    -2.lst) TABS(2) OBJECT(.\Objects\Timer2.obj)
+
+line level    source
+
+   1          
+   2          /* 
+   3             CH449 的定时器 T2
+   4          
+   5           * 定时器T0/T1 基本相同:
+   6           * 唯一区别在于定时器 T0 的模式 3，T0 的模式 3
+   7           * 当 T0 处于 模式 3 时，定时器 T0 的高八位和低八位 分别当作两个定时器来使用
+             -，
+   8           * 其中 TL0 使用定时器 T0 的寄存器和中断，TH0 占用定时器 T1 的寄存器中中断资�
+             -�。
+   9          
+  10           * 而定时器 2 是 16 位自动重载定时器
+  11           * 
+  12           * TH2 [7:0] 计数器高 8 位
+  13           * TL2 [7:0] 计数器低 8 位
+  14           * 
+  15           * RCAP2H [7:0] 定时/计数 或者 重载 数据高 8 位
+  16           * RCAP2L [7:0] 定时/计数 或者 重载 数据低 8 位
+  17           * 
+  18           * T2CON [7:0] ---- 定时器2 控制寄存器
+  19           *      TF2/CAP1F    EXF2    RCLK    TCLK    EXEN2   TR2    C_T2    CP_RL2
+  20           *            7       6       5       4       3       2       1       0
+  21           * 
+  22           *      TF2:    定时器2溢出中断标识位，从 0xFF 溢出到 0x00 时自动置 1，需要软件清
+             -零
+  23           *      CAP1F:  定时器2捕获中断标识位，同上 TF2
+  24           * 
+  25           *      EXF2:   外部触发，这里不管，哼(￢︿̫̿￢☆)
+  26           *      
+  27           *      RCLK:   UART0 RX 接收端的时钟选择，置 0 使用 Timer1，置 1 则为 Timer2 
+  28           *      TCLK:   UART0 TX 发送端的时钟选择，同上
+  29           * 
+  30           *      EXEN2:  T2EX 引脚(P2.5)触发使能，置 1 则在 T2EX 有效边沿触发定时器重载或者�
+             -��获，置 0 忽略
+  31           *      
+  32           *      TR2:    定时器2 启动/停止位，置 1 启动，置 0 关闭
+  33           *      
+  34           *      C_T2:   定时/脉冲计数2功能选择，置 0 内部时钟定时，置 1 使用外部引脚 T2(
+             -P1.0) 下降沿计数
+  35           *      CP_RL2: 定时/脉冲计数 和 捕获 功能选择，置 0 使用定时/脉冲计数功能，置 
+             -1 使用捕获功能
+  36           * 
+  37           * T2MOD [7:0] ---- 定时器2 方式寄存器
+  38           *      bTMR_CLK    bT2_CLK    bT1_CLK    bT0_CLK    bT2_CAP_M1    bT2_CAP_M0    T2OE    bT2_CAP1_EN 
+  39           *          7           6          5        4              3            2          1          0
+  40           *      
+  41           *      bTMR_CLK:   已选择快速时钟的 T0/T1/T2 定时器的最快时钟使能，置 1 使用 Fsys�
+             -�置 0 使用分频率时钟，本位的选择不影响选择标准时钟的定时器
+  42           *      
+  43           *      bT2_CLK:    T2 内部时钟选择，0 为标准时钟 Fsys/12，1 为快速时钟 
+  44                  *                  定时/计数模式下：Fsys/4(bTMR_CLK==0) 或 Fsys(bTMR_CLK==1)
+  45                  *                  UART0 时钟模式下：Fsys/2(bTMR_CLK==0) 或 Fsys(bTMR_CLK==1)
+  46                  * 
+  47                  
+C51 COMPILER V9.56.0.0   TIMER2                                                            10/26/2020 16:05:27 PAGE 2   
+
+  48           *      bT1_CLK:    !!!注意，这是 定时器 T1 定时器 T1 定时器 T1 的时钟控制位，不是 
+             -定时器 T2 的 
+  49           *      bT0_CLK:    !!!注意，这是 定时器 T0 定时器 T0 定时器 T0 的时钟控制位，不是 
+             -定时器 T2 的
+  50                              0 为标准时钟，Fsys/12
+  51                              1 为快速时钟，Fsys/4(bTMR_CLK==0) 或 Fsys(bTMR_CLK==1)
+  52          
+  53           *      bT2_CAP_M1: 捕捉方式高位 
+  54           *      bT2_CAP_M0: 捕捉方式低位
+  55                              x0:  下降沿到下降沿
+  56                              01： 任意沿到任意沿，即电平变化
+  57                              11： 上升沿到上升沿
+  58          
+  59           *      T2OE:       T2 时钟输出使能位，0 禁止输出，1 在 T2 引脚输出，频率为  T2 溢�
+             -��频率的一半
+  60          
+  61           *      bT2_CAP1_EN:    捕捉模式使能位，当 RCLK==0、TCLK==0、CP_RL2==1、C_T2==0、T2OE==0 时�
+             -��能捕获模，捕获 T2(P1.0) 有效边沿
+  62           *
+  63           * 
+  64           *    中断使能寄存器 IE [7:0]
+  65          
+  66              EA E_DIS ET2 ES ET1 EX1 ET0 EX0
+  67               7   6    5   4  3   2   1   0
+  68          
+  69              EA:     全局中断使能位，置 1 并且 E_DIS == 0 允许中断，置 0 屏蔽中断
+  70              E_DIS:    全局中断禁用控制位，置 1 屏蔽中断，置 0 并且 EA == 1 允许中断
+  71              ET2:    定时器 T2 中断使能位，置 1 允许 T2 中断，置 0 屏蔽
+  72              ES:     UART0 中断使能位，置 1 允许 UART0 中断，置 0 屏蔽
+  73              ET1:    定时器 T1 中断使能位，同 ET2
+  74              EX1:    外部中断 INT1 使能位，置 1 允许中断，置 0 屏蔽
+  75              ET0:    定时器 T0 中断使能位，同 ET2
+  76              EX0:    外部中断 INT0 使能位，同 EX1
+  77           *  
+  78           *      CH559 的中断源相当多，这里仅仅使用 INT0 外部中断一个，下面的是中断号�
+             -�
+  79            
+  80              0 --  外部中断 INT0
+  81              1 --  定时器 T0 中断
+  82              2 --  外部中断 INT1
+  83              3 --  定时器 T1 中断
+  84              4 --  UART0 中断
+  85              5 --  定时器 T2 中断
+  86              6 --  SPIO 中断
+  87              7 --  定时器 T3 中断
+  88              8 --  USB 中断
+  89              9 --  ADC 中断
+  90              10  --  UART1 中断
+  91              <<    中断 11 没有标，未知 
+  92              12  --  GPIO 中断
+  93              13  --  Watchdog 中断
+  94           *
+  95          **/
+  96          
+  97          #include"CH559.H"
+  98          
+  99          sbit LED_1 = P1^4;
+ 100          unsigned char tmp = 0;
+ 101          
+ 102          // 50 为每秒中断次数，范围在 16 - 1000_000 之间
+ 103          unsigned int freq = 65535 - 12000000/12/50;
+ 104          
+C51 COMPILER V9.56.0.0   TIMER2                                                            10/26/2020 16:05:27 PAGE 3   
+
+ 105          // 定时器中断频率为 50Hz,每个中断间隔 20ms,肉眼看不见效果
+ 106          // 增加一级计数，每隔 25 个中断触发一次，翻转 LED 灯
+ 107          // LED 的翻转周期为 500ms,频率为 1Hz 
+ 108          unsigned int i = 0;
+ 109          
+ 110          void Timer2_Init(void){
+ 111   1      
+ 112   1          EA = 1;
+ 113   1          E_DIS = 0;
+ 114   1          ET2 = 1;
+ 115   1          
+ 116   1          // 定时器 T2 拥有更快的时钟
+ 117   1          // 开启快速时钟模式，计数器频率是标准模式下的 3 倍，而最快时钟模式下频
+             -率可达标准模式的 12 倍
+ 118   1          T2MOD = 0x00;
+ 119   1      
+ 120   1          TH2     =   (freq & 0xFF00) >> 8  ;
+ 121   1          TL2     =   (freq & 0x00FF)       ;
+ 122   1          RCAP2H  =   (freq & 0xFF00) >> 8  ;
+ 123   1          RCAP2L  =   (freq & 0x00FF)       ;
+ 124   1      
+ 125   1          TR2 = 1;
+ 126   1      }
+ 127          
+ 128          void P1_Configure(void){
+ 129   1      
+ 130   1          // PORT_CFG[3:0] -- P3、P2、P1、P0
+ 131   1          // P1 为 推挽模式，第二位 PROT_CFG[1]
+ 132   1          // xxxx_xxxx & 1111_1101 = xxxx_xx0x
+ 133   1          PORT_CFG    = PORT_CFG & 0xFD;
+ 134   1      
+ 135   1        // LED 连接 P1^7、P1^6、P1^5、P1^4 
+ 136   1          // 禁用上拉电阻,PU[7:0] 分别对应 P1^7 - P1^0
+ 137   1          // 每个引脚的上拉可以单独控制
+ 138   1          // xxxx_xxxx & 0000_1111 = 0000_xxxx 
+ 139   1          P1_PU       = P1_PU & 0x0F;
+ 140   1          // DIR 选输出模式，同样的每个引脚都可以单独控制 11110000
+ 141   1        // xxxx_xxxx | 1111_0000 = 1111_xxxx
+ 142   1          P1_DIR      = P1_DIR | 0xF0;
+ 143   1      
+ 144   1      }
+ 145          
+ 146          void main(void){
+ 147   1          P1_Configure();
+ 148   1          Timer2_Init();
+ 149   1          P1 = 0x00;
+ 150   1          while(1);
+ 151   1      }
+ 152          
+ 153          void Timer2_Interrupt(void) interrupt 5{
+ 154   1          // CH559 的定时器中断不会清除定时器超时标识位
+ 155   1          // TF2 需要手动清零，否则定时器中断会一直触发
+ 156   1          TF2 = 0;
+ 157   1          // 0 - 24 --> 25
+ 158   1          if(i>=24){
+ 159   2              i = 0;
+ 160   2              tmp = !tmp;
+ 161   2              LED_1 = tmp;
+ 162   2          }else 
+ 163   1              i++;
+ 164   1      
+ 165   1      }
+C51 COMPILER V9.56.0.0   TIMER2                                                            10/26/2020 16:05:27 PAGE 4   
+
+ 166          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    111    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      5    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

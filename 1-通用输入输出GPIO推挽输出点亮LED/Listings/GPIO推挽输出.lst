@@ -1,0 +1,64 @@
+C51 COMPILER V9.56.0.0   GPIO________                                                      10/22/2020 11:40:33 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE GPIO________
+OBJECT MODULE PLACED IN .\Objects\GPIO�������.obj
+COMPILER INVOKED BY: F:\Keil\C51\BIN\C51.EXE GPIO�������.C OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings
+                    -\GPIO�������.lst) TABS(2) OBJECT(.\Objects\GPIO�������.obj)
+
+line level    source
+
+   1          /* 
+   2           * 2020年10月22日 11点17分 星期四
+   3           * 
+   4           * GPIO 推挽输出模式
+   5           * 
+   6           * GPIO 折磨了我很久，一直是块心病，这次将严格按照 CH559.H 库文件的方式使用 G
+             -PIO
+   7           * 
+   8           * GPIO 分为多个模式，本次实验使用推挽模式控制一个 LED 小灯。
+   9           * 
+  10           */
+  11          
+  12          #include"CH559.H"
+  13          
+  14          sbit LED_1 = P1^4;
+  15          sbit LED_2 = P1^5;
+  16          sbit LED_3 = P1^6;
+  17          
+  18          void P1_Configure(void){
+  19   1          // PORT_CFG[3:0] -- 1101
+  20   1          // P1 为 推挽模式，为 PROT_CFG[1]
+  21   1          PORT_CFG    = 0x0D;
+  22   1      
+  23   1          // 禁用上拉电阻
+  24   1          P1_PU       = 0x00;
+  25   1          // DIR 输出
+  26   1          P1_DIR      = 0xFF;
+  27   1      
+  28   1      }
+  29          
+  30          void main(void){
+  31   1        
+  32   1          P1_Configure();
+  33   1        
+  34   1          LED_1 = 0;
+  35   1          LED_2 = 1;
+  36   1          LED_3 = 0;
+  37   1      
+  38   1          while(1);
+  39   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     21    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,120 @@
+C51 COMPILER V9.56.0.0   UART                                                              10/29/2020 19:58:51 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE UART
+OBJECT MODULE PLACED IN .\Objects\Uart.obj
+COMPILER INVOKED BY: F:\Keil\C51\BIN\C51.EXE Uart.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\Uart.ls
+                    -t) TABS(2) OBJECT(.\Objects\Uart.obj)
+
+line level    source
+
+   1          /*
+   2           *  2020年10月29日 16点24分 ☆4
+   3           * 
+   4           *  串口通讯实验2 —— 使用定时器 2 产生串口时钟
+   5           *  
+   6           *  我首先试验过串口模式 0，几乎都已失败告终，由于没有例程，也无法检查出�
+             -��误的根源。
+   7           *  使用定时器 T1 驱动串口时发现计数周期短了，几乎无法生成低波特率的时钟�
+             -�
+   8           *  而定时器 T2 是一个自动重载的定时器，非常适合用作 串口Uart0 的时钟。
+   9           *  
+  10          **/
+  11          
+  12          #include"CH559.H"
+  13          #include<intrins.h>
+  14          
+  15          // 这是一个计算公式，但其中的除以 16 是什么原因我还没弄明白 🤷‍
+  16          // 65535 = 0xFFFF 是 16 位计数器的最大计数值
+  17          // 12000000 = 12M 是晶振频率
+  18          // 9200 是我设置的 波特率(bps)
+  19          // 为什么要除以➗16呢？？？
+  20          unsigned int code baud = 65535 - 12000000/4/16/1200;
+  21          
+  22          void timer2_config(void){
+  23   1      
+  24   1        TH2       = (baud & 0xFF00) >> 8;
+  25   1        TL2       = baud & 0x00FF;
+  26   1        RCAP2H    = (baud & 0xFF00) >> 8;
+  27   1        RCAP2L    = baud & 0x00FF;
+  28   1      
+  29   1        RCLK      = 1;   // 选择 Timer2 产生时钟
+  30   1        TCLK      = 1;
+  31   1      
+  32   1        C_T2      = 0;  // 使用内部时钟
+  33   1        CP_RL2    = 0;  // 用作定时而非计数
+  34   1      
+  35   1        TR2 = 1;        // 启动定时器 T2
+  36   1      
+  37   1      //  bTMR_CLK = 0;
+  38   1      //  bT2_CLK  = 0;
+  39   1      
+  40   1      }
+  41          
+  42          void uart0_config(void){
+  43   1        SM0 = 0;
+  44   1        SM1 = 1;
+  45   1        SM2 = 1;
+  46   1      
+  47   1        REN = 1;
+  48   1      }
+  49          
+  50          void interrupt_config(void){
+  51   1      
+  52   1        EA = 1;
+C51 COMPILER V9.56.0.0   UART                                                              10/29/2020 19:58:51 PAGE 2   
+
+  53   1        E_DIS = 0;
+  54   1        ES = 1;
+  55   1      
+  56   1      }
+  57          
+  58          unsigned char i = 0;
+  59          unsigned char txd_dat[64] = "ABCDEFG,HIJKLMN,OPQRST,UVWXYZ\n";
+  60          unsigned char send_enable = 0;
+  61          void main(void){
+  62   1      
+  63   1        interrupt_config();
+  64   1        uart0_config();
+  65   1        timer2_config();
+  66   1        send_enable = 1;
+  67   1        TI = 1;
+  68   1        while(1);
+  69   1      
+  70   1      }
+  71          
+  72          void uart0_interrupt(void) interrupt 4 {
+  73   1      
+  74   1        if(TI){
+  75   2          if(send_enable){
+  76   3            if(txd_dat[i]!=NULL){
+  77   4              SBUF = txd_dat[i];
+  78   4              i++;
+  79   4            }else{
+  80   4              i = 0;
+  81   4              send_enable = 0;
+  82   4            }
+  83   3      
+  84   3          }
+  85   2            TI = 0;
+  86   2        }
+  87   1        
+  88   1        if(RI){
+  89   2          RI = 0;
+  90   2        }
+  91   1      
+  92   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    118    ----
+   CONSTANT SIZE    =      2    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     66    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

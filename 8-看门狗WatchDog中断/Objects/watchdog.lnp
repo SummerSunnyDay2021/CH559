@@ -1,0 +1,4 @@
+".\Objects\STARTUP.obj",
+".\Objects\WatchDog.obj" 
+TO ".\Objects\watchdog" 
+PRINT(".\Listings\watchdog.m51") RAMSIZE(256) 

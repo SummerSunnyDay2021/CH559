@@ -1,0 +1,138 @@
+C51 COMPILER V9.56.0.0   UART                                                              11/01/2020 14:47:08 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE UART
+OBJECT MODULE PLACED IN .\Objects\Uart.obj
+COMPILER INVOKED BY: F:\Keil\C51\BIN\C51.EXE Uart.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\Uart.ls
+                    -t) TABS(2) OBJECT(.\Objects\Uart.obj)
+
+line level    source
+
+   1          /*
+   2           *  2020年11月1日 14点39分 ☆7
+   3           *  
+   4           *  使用看门狗复位，串口调了好久。。。😔😔😔
+   5           *  
+   6           *  
+   7           *  
+   8          **/
+   9          
+  10          #include"CH559.H"
+  11          #include<intrins.h>
+  12          
+  13          // 这是一个计算公式，但其中的除以 16 是什么原因我还没弄明白 🤷‍
+  14          // 65535 = 0xFFFF 是 16 位计数器的最大计数值
+  15          // 12000000 = 12M 是晶振频率
+  16          // 9200 是我设置的 波特率(bps)
+  17          // 为什么要除以➗16呢？？？
+  18          unsigned int code baud = 65535 - 12000000/4/16/1200;
+  19          
+  20          void delay(unsigned int t){
+  21   1        unsigned int i = 0;
+  22   1        unsigned int j = 0;
+  23   1        for(i=0;i<t;i++){
+  24   2          for(j=0;j<0x0FFF;j++)
+  25   2            _nop_();
+  26   2        }
+  27   1      }
+  28          
+  29          void timer2_config(void){
+  30   1      
+  31   1        TH2       = (baud & 0xFF00) >> 8;
+  32   1        TL2       = baud & 0x00FF;
+  33   1        RCAP2H    = (baud & 0xFF00) >> 8;
+  34   1        RCAP2L    = baud & 0x00FF;
+  35   1      
+  36   1        RCLK      = 1;   // 选择 Timer2 产生时钟
+  37   1        TCLK      = 1;
+  38   1      
+  39   1        C_T2      = 0;  // 使用内部时钟
+  40   1        CP_RL2    = 0;  // 用作定时而非计数
+  41   1      
+  42   1        TR2 = 1;        // 启动定时器 T2
+  43   1      
+  44   1      //  bTMR_CLK = 0;
+  45   1      //  bT2_CLK  = 0;
+  46   1      
+  47   1      }
+  48          
+  49          void uart0_config(void){
+  50   1        SM0 = 0;
+  51   1        SM1 = 1;
+  52   1        SM2 = 1;
+  53   1      
+  54   1        REN = 1;
+C51 COMPILER V9.56.0.0   UART                                                              11/01/2020 14:47:08 PAGE 2   
+
+  55   1      }
+  56          
+  57          void interrupt_config(void){
+  58   1      
+  59   1        EA = 1;
+  60   1        E_DIS = 0;
+  61   1        ES = 1;
+  62   1      
+  63   1      }
+  64          
+  65          void watchdog_config(void){
+  66   1      
+  67   1          WDOG_COUNT = 0x00;
+  68   1      
+  69   1          SAFE_MOD  = 0x55;
+  70   1          SAFE_MOD  = 0xAA;
+  71   1          GLOBAL_CFG = 0x01;
+  72   1          SAFE_MOD  = 0xFE;
+  73   1      
+  74   1      }
+  75          
+  76          unsigned char i = 0;
+  77          unsigned char dat = 0x01;
+  78          unsigned char send_enable = 0;
+  79          
+  80          void main(void){
+  81   1      
+  82   1        interrupt_config();
+  83   1        uart0_config();
+  84   1        timer2_config();
+  85   1        watchdog_config();
+  86   1        delay(500);
+  87   1        while(1){
+  88   2          send_enable = 1;
+  89   2          TI = 1;
+  90   2          delay(20);
+  91   2          dat++;
+  92   2        };
+  93   1      
+  94   1      }
+  95          
+  96          void uart0_interrupt(void) interrupt 4 {
+  97   1      
+  98   1        if(TI){
+  99   2          if(send_enable){
+ 100   3            SBUF = dat;
+ 101   3            send_enable = 0;
+ 102   3          }
+ 103   2          TI = 0;
+ 104   2        }
+ 105   1        
+ 106   1        if(RI){
+ 107   2            RI = 0;
+ 108   2        }
+ 109   1      
+ 110   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    157    ----
+   CONSTANT SIZE    =      2    ----
+   XDATA SIZE       =   ----    ----
+C51 COMPILER V9.56.0.0   UART                                                              11/01/2020 14:47:08 PAGE 3   
+
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      3    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

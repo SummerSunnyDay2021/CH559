@@ -1,0 +1,4 @@
+".\Objects\STARTUP.obj",
+".\Objects\GPIO推挽输出.obj" 
+TO ".\Objects\GPIO推挽输出" 
+PRINT(".\Listings\GPIO推挽输出.m51") RAMSIZE(256) 
